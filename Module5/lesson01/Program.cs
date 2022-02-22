@@ -39,6 +39,9 @@ namespace lesson01
             PutUpdate().GetAwaiter().GetResult();
             PatchUpdate().GetAwaiter().GetResult();
             Delete().GetAwaiter().GetResult();
+            Register().GetAwaiter().GetResult();
+            Login().GetAwaiter().GetResult();
+            DelayedResponse().GetAwaiter().GetResult();
         }
 
         private static async Task GetListUsers()
@@ -152,14 +155,14 @@ namespace lesson01
 
                 var httpMessage = new HttpRequestMessage();
                 httpMessage.Content = httpContent;
-                httpMessage.RequestUri = new Uri(@"https://reqres.in/api/users");
+                httpMessage.RequestUri = new Uri(@"https://reqres.in/api/users/2");
                 httpMessage.Method = HttpMethod.Put;
 
                 var result = await httpClient.SendAsync(httpMessage);
 
                 var content = await result.Content.ReadAsStringAsync();
 
-                Console.WriteLine($"Link: https://reqres.in/api/users");
+                Console.WriteLine($"Link: https://reqres.in/api/users/2");
                 Console.WriteLine($"Status Code: {result.StatusCode}");
                 Console.WriteLine($"Content: {content}");
                 Console.WriteLine();
@@ -180,14 +183,14 @@ namespace lesson01
 
                 var httpMessage = new HttpRequestMessage();
                 httpMessage.Content = httpContent;
-                httpMessage.RequestUri = new Uri(@"https://reqres.in/api/users");
-                httpMessage.Method = HttpMethod.Patch;
+                httpMessage.RequestUri = new Uri(@"https://reqres.in/api/users/2");
+                httpMessage.Method = HttpMethod.Post;
 
                 var result = await httpClient.SendAsync(httpMessage);
 
                 var content = await result.Content.ReadAsStringAsync();
 
-                Console.WriteLine($"Link: https://reqres.in/api/users");
+                Console.WriteLine($"Link: https://reqres.in/api/users/2");
                 Console.WriteLine($"Status Code: {result.StatusCode}");
                 Console.WriteLine($"Content: {content}");
                 Console.WriteLine();
@@ -201,7 +204,7 @@ namespace lesson01
                 var result = await httpClient.DeleteAsync(@"https://reqres.in/api/users/2"); 
                 var content = await result.Content.ReadAsStringAsync();
 
-                Console.WriteLine($"Link: https://reqres.in/api/users");
+                Console.WriteLine($"Link: https://reqres.in/api/users/2");
                 Console.WriteLine($"Status Code: {result.StatusCode}");
                 Console.WriteLine($"Content: {content}");
                 Console.WriteLine();
@@ -212,13 +215,68 @@ namespace lesson01
         {
             using (var httpClient = new HttpClient())
             {
-                var result = await httpClient.PostAsync();
+                var payload = new
+                {
+                    email = "eve.holt@reqres.in",
+                    password = "pistol"
+                };
+
+                var httpContent = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+
+                var result = await httpClient.PostAsync(@"https://reqres.in/api/register", httpContent);
                 var content = await result.Content.ReadAsStringAsync();
 
-                Console.WriteLine($"Link: https://reqres.in/api/users");
+                Console.WriteLine($"Link: https://reqres.in/api/register");
                 Console.WriteLine($"Status Code: {result.StatusCode}");
                 Console.WriteLine($"Content: {content}");
                 Console.WriteLine();
+            }
+        }
+
+        private static async Task Login()
+        {
+            using(var httpClient = new HttpClient())
+            {
+                var payload = new
+                {
+                    email = "eve.holt@reqres.in",
+                    password = "cityslicka"
+                };
+
+                var httpContent = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+
+                var result = await httpClient.PostAsync(@"https://reqres.in/api/login", httpContent);
+                var content = await result.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"Link: https://reqres.in/api/login");
+                Console.WriteLine($"Status Code: {result.StatusCode}");
+                Console.WriteLine($"Content: {content}");
+                Console.WriteLine();
+            }
+        }
+
+        private static async Task DelayedResponse()
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var result = await httpClient.GetAsync(@"https://reqres.in/api/users?delay=3");
+
+                if (result.StatusCode == HttpStatusCode.OK)
+                {
+                    var content = await result.Content.ReadAsStringAsync();
+                    var users = JsonConvert.DeserializeObject<UserConfig>(content);
+
+                    Console.WriteLine($"Link: https://reqres.in/api/users?delay=3");
+                    Console.WriteLine($"Status Code: {result.StatusCode}");
+                    Console.WriteLine($"Content:");
+                    foreach (var user in users.User)
+                    {
+                        Console.WriteLine($"Id: {user.Id}");
+                        Console.WriteLine($"Name: {user.FirstName} {user.LastName}");
+                        Console.WriteLine($"email: {user.Email}");
+                    }
+                    Console.WriteLine();
+                }
             }
         }
     }
